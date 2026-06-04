@@ -11,6 +11,18 @@ topics:
   - placeholder
   - loading
 
+screenshots:
+  - description: "Empty state in light mode"
+    path: screenshots/empty_state_light.png
+  - description: "Error and no-internet states"
+    path: screenshots/error_state_light.png
+  - description: "Search-empty state"
+    path: screenshots/search_empty_light.png
+  - description: "Shimmer skeleton loader"
+    path: screenshots/skeleton_light.png
+  - description: "Empty state in dark mode"
+    path: screenshots/empty_state_dark.png
+
 environment:
   sdk: ">=3.2.0 <4.0.0"
   flutter: ">=3.16.0"

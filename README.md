@@ -14,6 +14,14 @@ return items.isEmpty
     : ProductList(items: items);
 ```
 
+## Preview
+
+| Empty | Error | No internet |
+| :---: | :---: | :---: |
+| <img src="screenshots/empty_state_light.png" width="220"/> | <img src="screenshots/error_state_light.png" width="220"/> | <img src="screenshots/no_internet_light.png" width="220"/> |
+| **Search empty** | **Skeleton loader** | **Dark mode** |
+| <img src="screenshots/search_empty_light.png" width="220"/> | <img src="screenshots/skeleton_light.png" width="220"/> | <img src="screenshots/empty_state_dark.png" width="220"/> |
+
 ## Features
 
 - 🪶 **Zero dependencies** — pure Flutter, nothing extra to audit or update.
