@@ -1,0 +1,22 @@
+name: flutter_empty_state_example
+description: A small gallery app that demonstrates the flutter_empty_state widgets.
+publish_to: "none"
+version: 1.0.0
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_empty_state:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

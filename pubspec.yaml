@@ -1,0 +1,25 @@
+name: flutter_empty_state
+description: Lightweight, theme-aware empty, error, no-internet, search-empty and loading state widgets for Flutter. Customizable and dependency-free.
+version: 0.1.0
+repository: https://github.com/Shahzod010299/flutter_empty_state
+issue_tracker: https://github.com/Shahzod010299/flutter_empty_state/issues
+
+topics:
+  - ui
+  - widgets
+  - empty-state
+  - placeholder
+  - loading
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

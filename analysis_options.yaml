@@ -1,0 +1,3 @@
+# Lints for the package. The Flutter team's recommended set is a solid baseline,
+# and it's what most pub.dev users expect to see in a package like this.
+include: package:flutter_lints/flutter.yaml
