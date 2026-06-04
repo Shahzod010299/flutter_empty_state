@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.2
+
+- Declare supported platforms (Android, iOS, web, Windows, macOS, Linux)
+  explicitly so pub.dev lists them.
+
 ## 0.1.1
 
 - Fix the preview screenshots not showing on the pub.dev README (use absolute
