@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- Fix the preview screenshots not showing on the pub.dev README (use absolute
+  image URLs instead of relative paths).
+
 ## 0.1.0
 
 First release.
