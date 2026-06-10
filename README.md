@@ -24,19 +24,19 @@ return items.isEmpty
 
 ## Features
 
-- 🪶 **Zero dependencies** — pure Flutter, nothing extra to audit or update.
-- 🎨 **Theme-aware** — colours and text styles come from your `ThemeData`, so light/dark just works.
-- 🧩 **Five ready-made states** — `EmptyState`, `ErrorState`, `NoInternetState`, `SearchEmptyState`, `LoadingState`.
-- 🔀 **`StateView`** — render the right widget from a single `ViewState` value, with a cross-fade between states.
-- 🔄 **Pull-to-refresh** — pass `onRefresh` and any state becomes a `RefreshIndicator` scrollable.
-- ⏳ **Async-aware buttons** — return a `Future` from an action and the button shows inline progress until it's done.
-- 🧯 **Error details** — tuck raw exception text behind a collapsible, selectable "Details" disclosure.
-- 🌍 **Global styling** — set your defaults once with an `EmptyStateTheme`, override per widget when needed.
-- ✨ **Subtle entrance animation** — a tasteful fade + slide that respects the OS "reduce motion" setting.
-- 💀 **Skeleton loaders** — shimmer placeholder list and paragraph primitives, RTL-aware and themable.
-- ♿ **Accessible** — real text widgets, decorative icons, and a live region on the loading state.
-- 📦 **Drops in anywhere** — `Scaffold`, `Center`, `Column`, `ListView` and `CustomScrollView` all work without layout gymnastics.
-- ✅ **Null-safe** and covered by widget tests.
+- **Zero dependencies** — pure Flutter, nothing extra to audit or update.
+- **Theme-aware** — colours and text styles come from your `ThemeData`, so light/dark just works.
+- **Five ready-made states** — `EmptyState`, `ErrorState`, `NoInternetState`, `SearchEmptyState`, `LoadingState`.
+- **`StateView`** — render the right widget from a single `ViewState` value, with a cross-fade between states.
+- **Pull-to-refresh** — pass `onRefresh` and any state becomes a `RefreshIndicator` scrollable.
+- **Async-aware buttons** — return a `Future` from an action and the button shows inline progress until it's done.
+- **Error details** — tuck raw exception text behind a collapsible, selectable "Details" disclosure.
+- **Global styling** — set your defaults once with an `EmptyStateTheme`, override per widget when needed.
+- **Subtle entrance animation** — a tasteful fade + slide that respects the OS "reduce motion" setting.
+- **Skeleton loaders** — shimmer placeholder list and paragraph primitives, RTL-aware and themable.
+- **Accessible** — real text widgets, decorative icons, and a live region on the loading state.
+- **Drops in anywhere** — `Scaffold`, `Center`, `Column`, `ListView` and `CustomScrollView` all work without layout gymnastics.
+- **Null-safe** and covered by widget tests.
 
 ## Installation
 
