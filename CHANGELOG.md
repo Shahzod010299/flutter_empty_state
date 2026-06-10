@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Docs: drop the emoji bullets from the README features list for a cleaner look.
+
 ## 0.2.0
 
 - **Pull-to-refresh**: new `onRefresh` on `EmptyState`, `ErrorState`,
