@@ -3,29 +3,35 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'empty_state_localizations.dart';
+import 'empty_state_theme.dart';
 import 'state_layout.dart';
 
-/// Shown when the app can't reach the network.
+/// A positive, "you're all done" state — order placed, file uploaded, form
+/// submitted.
 ///
 /// ```dart
-/// NoInternetState(onRetry: _reconnect)
+/// SuccessState(
+///   title: 'Order placed',
+///   message: 'We\'ll email you a receipt shortly.',
+///   actionText: 'Back to home',
+///   onAction: _goHome,
+/// )
 /// ```
 ///
-/// It's essentially an error state tuned for connectivity, with its own icon
-/// and copy. Pass [onRetry] to show the retry button.
-class NoInternetState extends StatelessWidget {
-  const NoInternetState({
+/// It's the same layout as the other states, just tuned for good news: a
+/// check icon that defaults to the theme's primary colour instead of the
+/// muted grey the error/empty states use.
+class SuccessState extends StatelessWidget {
+  const SuccessState({
     super.key,
-    this.onRetry,
-    this.retryText = kFesUseDefault,
-    this.icon = Icons.wifi_off_rounded,
+    this.icon = Icons.check_circle_outline_rounded,
     this.iconWidget,
-    this.title = kFesUseDefault,
-    this.message = kFesUseDefault,
+    this.title = 'All done',
+    this.message,
+    this.actionText,
+    this.onAction,
     this.secondaryActionText,
     this.onSecondaryAction,
-    this.onRefresh,
     this.iconSize,
     this.spacing,
     this.padding,
@@ -40,14 +46,6 @@ class NoInternetState extends StatelessWidget {
     this.animationDuration,
   });
 
-  /// Called when the retry button is tapped. No button is shown when null.
-  /// Returning a [Future] makes the button show inline progress until it
-  /// completes.
-  final FutureOr<void> Function()? onRetry;
-
-  /// Label for the retry button.
-  final String retryText;
-
   /// {@macro fes.icon}
   final IconData? icon;
 
@@ -60,14 +58,17 @@ class NoInternetState extends StatelessWidget {
   /// {@macro fes.message}
   final String? message;
 
+  /// {@macro fes.actionText}
+  final String? actionText;
+
+  /// {@macro fes.onAction}
+  final FutureOr<void> Function()? onAction;
+
   /// {@macro fes.secondaryActionText}
   final String? secondaryActionText;
 
   /// {@macro fes.onSecondaryAction}
   final FutureOr<void> Function()? onSecondaryAction;
-
-  /// {@macro fes.onRefresh}
-  final Future<void> Function()? onRefresh;
 
   /// {@macro fes.iconSize}
   final double? iconSize;
@@ -84,7 +85,8 @@ class NoInternetState extends StatelessWidget {
   /// {@macro fes.textAlign}
   final TextAlign? textAlign;
 
-  /// {@macro fes.iconColor}
+  /// Icon colour. Falls back to the [EmptyStateTheme], then the theme's
+  /// primary colour (not the muted grey, since this is good news).
   final Color? iconColor;
 
   /// {@macro fes.titleStyle}
@@ -107,24 +109,27 @@ class NoInternetState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = EmptyStateLocalizations.of(context);
+    final theme = Theme.of(context);
+    // Same precedence as everywhere else (explicit arg > theme > default), but
+    // the built-in default is the primary colour so success reads as positive.
+    final resolvedIconColor = iconColor ??
+        theme.extension<EmptyStateTheme>()?.iconColor ??
+        theme.colorScheme.primary;
     return StateLayout(
       icon: icon,
       iconWidget: iconWidget,
-      title: resolveFesString(title, l10n.noInternetTitle),
-      message: resolveFesString(message, l10n.noInternetMessage),
-      // Map the connectivity-specific API onto the shared action slot.
-      actionText: resolveFesString(retryText, l10n.retryButtonLabel),
-      onAction: onRetry,
+      title: title,
+      message: message,
+      actionText: actionText,
+      onAction: onAction,
       secondaryActionText: secondaryActionText,
       onSecondaryAction: onSecondaryAction,
-      onRefresh: onRefresh,
       iconSize: iconSize,
       spacing: spacing,
       padding: padding,
       maxContentWidth: maxContentWidth,
       textAlign: textAlign,
-      iconColor: iconColor,
+      iconColor: resolvedIconColor,
       titleStyle: titleStyle,
       messageStyle: messageStyle,
       buttonStyle: buttonStyle,
@@ -137,8 +142,10 @@ class NoInternetState extends StatelessWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(
-      FlagProperty('retry', value: onRetry != null, ifTrue: 'tappable'),
-    );
+    properties
+      ..add(StringProperty('title', title, defaultValue: null))
+      ..add(StringProperty('message', message, defaultValue: null))
+      ..add(
+          FlagProperty('action', value: onAction != null, ifTrue: 'tappable'));
   }
 }

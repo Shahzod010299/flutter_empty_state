@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0
+
+- **Localization**: every default string is now translatable through
+  `EmptyStateLocalizations` and its `delegate`. Ten languages ship in the box
+  (en, uz, ru, es, fr, de, pt, tr, ar, zh) and unlisted locales fall back to
+  English. Works with zero setup; explicit arguments still win, and `null`
+  still hides an element.
+- **`AsyncStateView`, `FutureStateView`, `StreamStateView`**: drive the right
+  state straight from an `AsyncSnapshot`, `Future` or `Stream` — loading,
+  error, offline (via a `noInternetWhen` classifier), "loaded but empty" (via
+  an `isEmpty` predicate) and content, all from one widget.
+- **`SuccessState`**: a positive, "you're all done" state with a check icon
+  that defaults to the primary colour.
+- **`SkeletonCard` and `SkeletonGrid`**: placeholder counterparts to a card
+  and a `GridView`, both safe in unbounded-height parents.
+- **CI**: now collects coverage and uploads it to Codecov.
+- **Live web demo** deployed to GitHub Pages from the example app.
+
 ## 0.2.1
 
 - Docs: drop the emoji bullets from the README features list for a cleaner look.

@@ -27,7 +27,13 @@ jobs:
 
       # Golden files are platform-specific, so skip them on CI.
       - name: Run tests
-        run: flutter test --exclude-tags golden
+        run: flutter test --exclude-tags golden --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/lcov.info
+          fail_ci_if_error: false
 
       - name: Validate the package for publishing
         run: flutter pub publish --dry-run

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_empty_state/flutter_empty_state.dart';
 
 void main() => runApp(const ExampleApp());
@@ -13,12 +14,31 @@ class ExampleApp extends StatefulWidget {
 }
 
 // The demo's own list of "screens". Most map straight onto a ViewState; the
-// extra one is for SearchEmptyState, which isn't part of ViewState.
-enum _Demo { content, loading, skeleton, empty, search, error, noInternet }
+// extras (search, skeleton, grid, success) aren't part of ViewState.
+enum _Demo {
+  content,
+  loading,
+  skeleton,
+  grid,
+  empty,
+  search,
+  error,
+  noInternet,
+  success,
+}
+
+// A few of the bundled locales, to show off the localized default copy.
+const _locales = [
+  Locale('en'),
+  Locale('uz'),
+  Locale('ru'),
+  Locale('ar'),
+];
 
 class _ExampleAppState extends State<ExampleApp> {
   _Demo _demo = _Demo.empty;
   ThemeMode _themeMode = ThemeMode.light;
+  Locale _locale = const Locale('en');
 
   void _toggleTheme() {
     setState(() {
@@ -27,11 +47,28 @@ class _ExampleAppState extends State<ExampleApp> {
     });
   }
 
+  void _cycleLocale() {
+    setState(() {
+      final next = (_locales.indexOf(_locale) + 1) % _locales.length;
+      _locale = _locales[next];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       themeMode: _themeMode,
+      locale: _locale,
+      // Registering the delegate localizes every default string. The package
+      // falls back to English for any locale you don't list here.
+      localizationsDelegates: const [
+        EmptyStateLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: EmptyStateLocalizations.supportedLocales,
       // Registering an EmptyStateTheme styles every state widget at once — here
       // we just nudge the spacing. Per-widget arguments still override it.
       theme: ThemeData(
@@ -49,6 +86,13 @@ class _ExampleAppState extends State<ExampleApp> {
         appBar: AppBar(
           title: const Text('flutter_empty_state'),
           actions: [
+            TextButton(
+              onPressed: _cycleLocale,
+              child: Text(
+                _locale.languageCode.toUpperCase(),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
             IconButton(
               tooltip: 'Toggle light / dark',
               onPressed: _toggleTheme,
@@ -68,16 +112,27 @@ class _ExampleAppState extends State<ExampleApp> {
   }
 
   Widget _buildBody() {
-    // The skeleton loader is a drop-in alternative to a plain spinner.
+    // The skeleton loaders are drop-in alternatives to a plain spinner.
     if (_demo == _Demo.skeleton) {
       return const SkeletonList();
     }
+    if (_demo == _Demo.grid) {
+      return const SkeletonGrid();
+    }
 
-    // SearchEmptyState isn't a ViewState, so it gets its own branch.
+    // These aren't ViewStates, so they get their own branches.
     if (_demo == _Demo.search) {
       return SearchEmptyState(
         query: 'iPhone 99',
         onClear: () => setState(() => _demo = _Demo.content),
+      );
+    }
+    if (_demo == _Demo.success) {
+      return SuccessState(
+        title: 'Order placed',
+        message: 'We\'ll email you a receipt shortly.',
+        actionText: 'Back to products',
+        onAction: () => setState(() => _demo = _Demo.content),
       );
     }
 
@@ -124,7 +179,9 @@ class _ExampleAppState extends State<ExampleApp> {
       case _Demo.noInternet:
         return ViewState.noInternet;
       case _Demo.skeleton:
+      case _Demo.grid:
       case _Demo.search:
+      case _Demo.success:
       case _Demo.content:
         return ViewState.content;
     }
@@ -167,10 +224,12 @@ class _DemoPicker extends StatelessWidget {
     _Demo.content: 'Content',
     _Demo.loading: 'Loading',
     _Demo.skeleton: 'Skeleton',
+    _Demo.grid: 'Grid',
     _Demo.empty: 'Empty',
     _Demo.search: 'Search',
     _Demo.error: 'Error',
     _Demo.noInternet: 'Offline',
+    _Demo.success: 'Success',
   };
 
   @override

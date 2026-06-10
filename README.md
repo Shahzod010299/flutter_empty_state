@@ -2,7 +2,10 @@
 
 [![pub package](https://img.shields.io/pub/v/flutter_empty_state.svg)](https://pub.dev/packages/flutter_empty_state)
 [![CI](https://github.com/Shahzod010299/flutter_empty_state/actions/workflows/ci.yml/badge.svg)](https://github.com/Shahzod010299/flutter_empty_state/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Shahzod010299/flutter_empty_state/branch/master/graph/badge.svg)](https://codecov.io/gh/Shahzod010299/flutter_empty_state)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+**[▶ Live demo](https://shahzod010299.github.io/flutter_empty_state/)** · **[pub.dev](https://pub.dev/packages/flutter_empty_state)**
 
 Stop rewriting the same `Center(child: Text('No data found'))` in every screen.
 
@@ -26,14 +29,16 @@ return items.isEmpty
 
 - **Zero dependencies** — pure Flutter, nothing extra to audit or update.
 - **Theme-aware** — colours and text styles come from your `ThemeData`, so light/dark just works.
-- **Five ready-made states** — `EmptyState`, `ErrorState`, `NoInternetState`, `SearchEmptyState`, `LoadingState`.
+- **Six ready-made states** — `EmptyState`, `ErrorState`, `NoInternetState`, `SearchEmptyState`, `LoadingState`, `SuccessState`.
 - **`StateView`** — render the right widget from a single `ViewState` value, with a cross-fade between states.
+- **Future & Stream views** — `FutureStateView` / `StreamStateView` map an async source straight to loading / error / empty / content.
+- **Localized** — every default string is translatable; 10 languages ship in the box, with English fallback.
 - **Pull-to-refresh** — pass `onRefresh` and any state becomes a `RefreshIndicator` scrollable.
 - **Async-aware buttons** — return a `Future` from an action and the button shows inline progress until it's done.
 - **Error details** — tuck raw exception text behind a collapsible, selectable "Details" disclosure.
 - **Global styling** — set your defaults once with an `EmptyStateTheme`, override per widget when needed.
 - **Subtle entrance animation** — a tasteful fade + slide that respects the OS "reduce motion" setting.
-- **Skeleton loaders** — shimmer placeholder list and paragraph primitives, RTL-aware and themable.
+- **Skeleton loaders** — shimmer list, paragraph, card and grid primitives, RTL-aware and themable.
 - **Accessible** — real text widgets, decorative icons, and a live region on the loading state.
 - **Drops in anywhere** — `Scaffold`, `Center`, `Column`, `ListView` and `CustomScrollView` all work without layout gymnastics.
 - **Null-safe** and covered by widget tests.
@@ -163,6 +168,22 @@ LoadingState(
 )
 ```
 
+### SuccessState
+
+For the happy path — order placed, file uploaded, form submitted:
+
+```dart
+SuccessState(
+  title: 'Order placed',
+  message: 'We\'ll email you a receipt shortly.',
+  actionText: 'Back to home',
+  onAction: _goHome,
+)
+```
+
+Same layout as the other states, tuned for good news: the check icon defaults
+to your theme's primary colour instead of the muted grey.
+
 ### Skeleton loading
 
 For a more polished wait, swap the spinner for a shimmering placeholder list:
@@ -189,6 +210,16 @@ Shimmer(
       Skeleton(width: 180, height: 14),
     ],
   ),
+)
+```
+
+Building a grid instead of a list? `SkeletonGrid` (made of `SkeletonCard`s) is the grid counterpart to `SkeletonList`:
+
+```dart
+StateView(
+  state: state,
+  loading: const SkeletonGrid(crossAxisCount: 2),
+  child: ProductGrid(items: items),
 )
 ```
 
@@ -256,6 +287,51 @@ Future<void> load() async {
   }
 }
 ```
+
+## Driving from a Future or Stream
+
+Most of the time you don't even track a `ViewState` yourself — you have a
+`Future` or a `Stream`. `FutureStateView` and `StreamStateView` wire the whole
+lifecycle (loading → error / offline / empty → content) to it for you, so the
+controller flow above collapses to a single widget:
+
+```dart
+FutureStateView<List<Product>>(
+  future: _future,
+  isEmpty: (products) => products.isEmpty,          // → empty state
+  noInternetWhen: (e) => e is SocketException,       // → no-internet state
+  onRetry: () => setState(() => _future = _load()),  // pre-wired retry button
+  builder: (context, products) => ProductList(products: products),
+)
+```
+
+`StreamStateView` has the same API for a `Stream`. Already inside a
+`FutureBuilder`/`StreamBuilder`? Use `AsyncStateView`, which takes the
+`AsyncSnapshot` directly. All three leave any slot you don't set to the same
+sensible defaults as `StateView`.
+
+## Localization
+
+Every default string ("Retry", "No internet connection", …) is translatable.
+Ten languages ship in the box — English, Uzbek, Russian, Spanish, French,
+German, Portuguese, Turkish, Arabic and Chinese — and any other locale falls
+back to English. It works with **zero setup**; to switch languages, register
+the delegate:
+
+```dart
+MaterialApp(
+  localizationsDelegates: const [
+    EmptyStateLocalizations.delegate,
+    ...GlobalMaterialLocalizations.delegates,
+  ],
+  supportedLocales: EmptyStateLocalizations.supportedLocales,
+)
+```
+
+Explicit strings always win, so `ErrorState(title: 'Custom')` overrides the
+translation, and `title: null` still hides the element. Need a language that
+isn't bundled? Subclass `EmptyStateLocalizations` and provide it through your
+own delegate.
 
 ## Custom styling
 

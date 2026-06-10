@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'empty_state_localizations.dart';
 import 'state_layout.dart';
 
 /// A friendly placeholder for a screen or list that simply has no content yet.
@@ -24,7 +25,7 @@ class EmptyState extends StatelessWidget {
     super.key,
     this.icon = Icons.inbox_outlined,
     this.iconWidget,
-    this.title = 'Nothing here yet',
+    this.title = kFesUseDefault,
     this.message,
     this.actionText,
     this.onAction,
@@ -57,7 +58,8 @@ class EmptyState extends StatelessWidget {
   final Widget? iconWidget;
 
   /// {@template fes.title}
-  /// The headline. Pass null to hide it.
+  /// The headline. Leave it unset for the localized default, or pass null to
+  /// hide it.
   /// {@endtemplate}
   final String? title;
 
@@ -172,10 +174,11 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = EmptyStateLocalizations.of(context);
     return StateLayout(
       icon: icon,
       iconWidget: iconWidget,
-      title: title,
+      title: resolveFesString(title, l10n.emptyTitle),
       message: message,
       actionText: actionText,
       onAction: onAction,
@@ -201,7 +204,7 @@ class EmptyState extends StatelessWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
-      ..add(StringProperty('title', title, defaultValue: null))
+      ..add(StringProperty('title', title, defaultValue: kFesUseDefault))
       ..add(StringProperty('message', message, defaultValue: null))
       ..add(DiagnosticsProperty<IconData>('icon', icon, defaultValue: null))
       ..add(

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_empty_state/flutter_empty_state.dart';
 
@@ -10,6 +11,22 @@ import 'package:flutter_empty_state/flutter_empty_state.dart';
 Widget _host(Widget child, {ThemeData? theme}) {
   return MaterialApp(
     theme: theme,
+    home: Scaffold(body: child),
+  );
+}
+
+// Like _host, but registers the package's localizations under a given locale,
+// so we can assert the translated default copy.
+Widget _localizedHost(Widget child, {required Locale locale}) {
+  return MaterialApp(
+    locale: locale,
+    localizationsDelegates: const [
+      EmptyStateLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    supportedLocales: EmptyStateLocalizations.supportedLocales,
     home: Scaffold(body: child),
   );
 }
@@ -406,6 +423,168 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('SkeletonGrid survives an unbounded-height parent',
+        (tester) async {
+      await tester.pumpWidget(_host(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: SingleChildScrollView(child: SkeletonGrid(itemCount: 4)),
+        ),
+      ));
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(SkeletonCard), findsNWidgets(4));
+    });
+  });
+
+  group('Localization', () {
+    testWidgets('falls back to English with no delegate', (tester) async {
+      await tester.pumpWidget(_host(const ErrorState(animate: false)));
+      expect(find.text('Something went wrong'), findsOneWidget);
+    });
+
+    testWidgets('uses Uzbek copy under an uz locale', (tester) async {
+      await tester.pumpWidget(_localizedHost(
+        // onAction so the retry button (and its localized label) renders.
+        ErrorState(animate: false, onAction: () {}),
+        locale: const Locale('uz'),
+      ));
+      expect(find.text('Nimadir xato ketdi'), findsOneWidget);
+      expect(find.text('Qayta urinish'), findsOneWidget);
+    });
+
+    testWidgets('uses Russian copy under a ru locale', (tester) async {
+      await tester.pumpWidget(_localizedHost(
+        const NoInternetState(animate: false),
+        locale: const Locale('ru'),
+      ));
+      expect(find.text('Нет подключения к интернету'), findsOneWidget);
+    });
+
+    testWidgets('an unsupported locale falls back to English', (tester) async {
+      await tester.pumpWidget(_localizedHost(
+        const EmptyState(animate: false),
+        locale: const Locale('ja'),
+      ));
+      expect(find.text('Nothing here yet'), findsOneWidget);
+    });
+
+    testWidgets('an explicit string still beats the localization',
+        (tester) async {
+      await tester.pumpWidget(_localizedHost(
+        const ErrorState(animate: false, title: 'Custom'),
+        locale: const Locale('uz'),
+      ));
+      expect(find.text('Custom'), findsOneWidget);
+      expect(find.text('Nimadir xato ketdi'), findsNothing);
+    });
+
+    testWidgets('a null title hides it even with localization', (tester) async {
+      await tester.pumpWidget(_localizedHost(
+        const ErrorState(animate: false, title: null),
+        locale: const Locale('uz'),
+      ));
+      expect(find.text('Nimadir xato ketdi'), findsNothing);
+    });
+  });
+
+  group('SuccessState', () {
+    testWidgets('renders with a primary-coloured icon by default',
+        (tester) async {
+      final theme = ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+      );
+      await tester.pumpWidget(_host(
+        const SuccessState(animate: false, title: 'Order placed'),
+        theme: theme,
+      ));
+
+      expect(find.text('Order placed'), findsOneWidget);
+      final icon = tester.widget<Icon>(find.byType(Icon));
+      expect(icon.color, theme.colorScheme.primary);
+    });
+  });
+
+  group('AsyncStateView', () {
+    testWidgets('shows loading while waiting', (tester) async {
+      await tester.pumpWidget(_host(AsyncStateView<int>(
+        snapshot: const AsyncSnapshot<int>.waiting(),
+        animate: false,
+        loading: const LoadingState(animate: false),
+        builder: (context, data) => Text('$data'),
+      )));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('shows content when data is present', (tester) async {
+      await tester.pumpWidget(_host(AsyncStateView<String>(
+        snapshot:
+            const AsyncSnapshot<String>.withData(ConnectionState.done, 'hello'),
+        animate: false,
+        builder: (context, data) => Text(data),
+      )));
+      expect(find.text('hello'), findsOneWidget);
+    });
+
+    testWidgets('shows empty when isEmpty returns true', (tester) async {
+      await tester.pumpWidget(_host(AsyncStateView<List<int>>(
+        snapshot: const AsyncSnapshot<List<int>>.withData(
+            ConnectionState.done, <int>[]),
+        animate: false,
+        isEmpty: (list) => list.isEmpty,
+        empty: const EmptyState(animate: false, title: 'Empty!'),
+        builder: (context, data) => Text('${data.length} items'),
+      )));
+      expect(find.text('Empty!'), findsOneWidget);
+    });
+
+    testWidgets('shows error on hasError', (tester) async {
+      await tester.pumpWidget(_host(AsyncStateView<int>(
+        snapshot:
+            const AsyncSnapshot<int>.withError(ConnectionState.done, 'boom'),
+        animate: false,
+        builder: (context, data) => Text('$data'),
+      )));
+      expect(find.byType(ErrorState), findsOneWidget);
+    });
+
+    testWidgets('routes to no-internet when noInternetWhen matches',
+        (tester) async {
+      await tester.pumpWidget(_host(AsyncStateView<int>(
+        snapshot:
+            const AsyncSnapshot<int>.withError(ConnectionState.done, 'offline'),
+        animate: false,
+        noInternetWhen: (error) => error == 'offline',
+        builder: (context, data) => Text('$data'),
+      )));
+      expect(find.byType(NoInternetState), findsOneWidget);
+    });
+
+    testWidgets('FutureStateView resolves to content', (tester) async {
+      await tester.pumpWidget(_host(FutureStateView<String>(
+        future: Future<String>.value('done'),
+        animate: false,
+        builder: (context, data) => Text(data),
+      )));
+      await tester.pumpAndSettle();
+      expect(find.text('done'), findsOneWidget);
+    });
+
+    testWidgets('StreamStateView renders the latest value', (tester) async {
+      final controller = StreamController<int>();
+      addTearDown(controller.close);
+      await tester.pumpWidget(_host(StreamStateView<int>(
+        stream: controller.stream,
+        animate: false,
+        builder: (context, data) => Text('value $data'),
+      )));
+
+      controller.add(42);
+      await tester.pump();
+      expect(find.text('value 42'), findsOneWidget);
     });
   });
 }

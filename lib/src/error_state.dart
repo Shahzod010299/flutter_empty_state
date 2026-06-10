@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'empty_state_localizations.dart';
 import 'state_layout.dart';
 
 /// Shown when something failed and you want to let the user try again.
@@ -34,11 +35,11 @@ class ErrorState extends StatelessWidget {
     super.key,
     this.icon = Icons.error_outline,
     this.iconWidget,
-    this.title = 'Something went wrong',
-    this.message = 'Please try again later.',
+    this.title = kFesUseDefault,
+    this.message = kFesUseDefault,
     this.details,
-    this.detailsLabel = 'Details',
-    this.actionText = 'Retry',
+    this.detailsLabel = kFesUseDefault,
+    this.actionText = kFesUseDefault,
     this.onAction,
     this.secondaryActionText,
     this.onSecondaryAction,
@@ -131,14 +132,15 @@ class ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = EmptyStateLocalizations.of(context);
     return StateLayout(
       icon: icon,
       iconWidget: iconWidget,
-      title: title,
-      message: message,
+      title: resolveFesString(title, l10n.errorTitle),
+      message: resolveFesString(message, l10n.errorMessage),
       details: details,
-      detailsLabel: detailsLabel,
-      actionText: actionText,
+      detailsLabel: resolveFesString(detailsLabel, l10n.detailsLabel),
+      actionText: resolveFesString(actionText, l10n.retryButtonLabel),
       onAction: onAction,
       secondaryActionText: secondaryActionText,
       onSecondaryAction: onSecondaryAction,
@@ -162,8 +164,8 @@ class ErrorState extends StatelessWidget {
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
     properties
-      ..add(StringProperty('title', title, defaultValue: null))
-      ..add(StringProperty('message', message, defaultValue: null))
+      ..add(StringProperty('title', title, defaultValue: kFesUseDefault))
+      ..add(StringProperty('message', message, defaultValue: kFesUseDefault))
       ..add(StringProperty('details', details, defaultValue: null))
       ..add(
           FlagProperty('action', value: onAction != null, ifTrue: 'tappable'));

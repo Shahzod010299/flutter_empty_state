@@ -272,6 +272,117 @@ class _SkeletonRow extends StatelessWidget {
   }
 }
 
+/// A card-shaped placeholder — an image/thumbnail block on top with a couple
+/// of text lines under it. Drop it into a grid cell or use it on its own.
+///
+/// ```dart
+/// Shimmer(child: SkeletonCard())
+/// ```
+class SkeletonCard extends StatelessWidget {
+  const SkeletonCard({
+    super.key,
+    this.imageHeight = 120,
+    this.lines = 2,
+    this.padding = const EdgeInsets.all(12),
+    this.borderRadius = const BorderRadius.all(Radius.circular(12)),
+  }) : assert(lines >= 0, 'lines cannot be negative');
+
+  /// Height of the top image/thumbnail block.
+  final double imageHeight;
+
+  /// How many text lines to draw under the image.
+  final int lines;
+
+  /// Padding around the text block under the image.
+  final EdgeInsetsGeometry padding;
+
+  /// Corner radius of the image block.
+  final BorderRadiusGeometry borderRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Skeleton(height: imageHeight, borderRadius: borderRadius),
+        if (lines > 0)
+          Padding(
+            padding: padding,
+            child: SkeletonParagraph(lines: lines, lineHeight: 12),
+          ),
+      ],
+    );
+  }
+}
+
+/// A grid of [SkeletonCard]s — the placeholder counterpart to a `GridView`.
+///
+/// ```dart
+/// StateView(state: state, loading: const SkeletonGrid(), child: grid)
+/// ```
+class SkeletonGrid extends StatelessWidget {
+  const SkeletonGrid({
+    super.key,
+    this.itemCount = 6,
+    this.crossAxisCount = 2,
+    this.padding = const EdgeInsets.all(16),
+    this.mainAxisSpacing = 16,
+    this.crossAxisSpacing = 16,
+    this.childAspectRatio = 0.8,
+    this.card = const SkeletonCard(),
+  });
+
+  /// How many placeholder cards to show.
+  final int itemCount;
+
+  /// Number of columns.
+  final int crossAxisCount;
+
+  /// Padding around the grid.
+  final EdgeInsetsGeometry padding;
+
+  /// Vertical gap between rows.
+  final double mainAxisSpacing;
+
+  /// Horizontal gap between columns.
+  final double crossAxisSpacing;
+
+  /// Width-to-height ratio of each cell.
+  final double childAspectRatio;
+
+  /// The card to repeat. Swap in your own [SkeletonCard] configuration.
+  final Widget card;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Loading',
+      container: true,
+      child: Shimmer(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return GridView.builder(
+              padding: padding,
+              // Size to children inside an unbounded parent instead of throwing.
+              shrinkWrap: !constraints.hasBoundedHeight,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: mainAxisSpacing,
+                crossAxisSpacing: crossAxisSpacing,
+                childAspectRatio: childAspectRatio,
+              ),
+              itemCount: itemCount,
+              itemBuilder: (context, index) => card,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
 // Skeleton colours come from the EmptyStateTheme when set; otherwise they're
 // blended from the scheme so they read correctly in both light and dark
 // without any hard-coded greys.

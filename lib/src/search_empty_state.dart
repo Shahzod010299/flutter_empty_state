@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'empty_state_localizations.dart';
 import 'state_layout.dart';
 
 /// Shown when a search came back with nothing.
@@ -19,10 +20,10 @@ class SearchEmptyState extends StatelessWidget {
     super.key,
     this.query,
     this.onClear,
-    this.clearText = 'Clear search',
+    this.clearText = kFesUseDefault,
     this.icon = Icons.search_off_rounded,
     this.iconWidget,
-    this.title = 'No results found',
+    this.title = kFesUseDefault,
     this.message,
     this.secondaryActionText,
     this.onSecondaryAction,
@@ -111,16 +112,17 @@ class SearchEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = EmptyStateLocalizations.of(context);
     final hasQuery = query != null && query!.trim().isNotEmpty;
     final resolvedMessage = message ??
-        (hasQuery ? 'No matches for "$query".' : 'Try a different search.');
+        (hasQuery ? l10n.searchNoMatches(query!) : l10n.searchTryDifferent);
 
     return StateLayout(
       icon: icon,
       iconWidget: iconWidget,
-      title: title,
+      title: resolveFesString(title, l10n.searchEmptyTitle),
       message: resolvedMessage,
-      actionText: clearText,
+      actionText: resolveFesString(clearText, l10n.clearSearchButtonLabel),
       onAction: onClear,
       secondaryActionText: secondaryActionText,
       onSecondaryAction: onSecondaryAction,

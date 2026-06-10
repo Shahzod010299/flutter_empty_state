@@ -54,16 +54,24 @@ class StateView extends StatelessWidget {
   /// Shown for [ViewState.content] — your actual screen.
   final Widget? child;
 
+  /// {@template fes.stateview.loading}
   /// Shown for [ViewState.loading]. Defaults to a [LoadingState].
+  /// {@endtemplate}
   final Widget? loading;
 
+  /// {@template fes.stateview.empty}
   /// Shown for [ViewState.empty]. Defaults to an [EmptyState].
+  /// {@endtemplate}
   final Widget? empty;
 
+  /// {@template fes.stateview.error}
   /// Shown for [ViewState.error]. Defaults to an [ErrorState].
+  /// {@endtemplate}
   final Widget? error;
 
+  /// {@template fes.stateview.noInternet}
   /// Shown for [ViewState.noInternet]. Defaults to a [NoInternetState].
+  /// {@endtemplate}
   final Widget? noInternet;
 
   /// Wires the retry button of the *default* [error] and [noInternet] widgets,

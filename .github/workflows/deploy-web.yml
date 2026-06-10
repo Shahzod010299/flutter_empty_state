@@ -1,0 +1,59 @@
+name: Deploy web demo
+
+# Builds the example app for the web and publishes it to GitHub Pages, so the
+# README can link to a live, interactive demo.
+#
+# One-time setup in the repo: Settings → Pages → "Build and deployment" →
+# Source: "GitHub Actions".
+
+on:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+
+# Allow this workflow to publish to Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One concurrent deployment; let a newer run cancel an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        working-directory: example
+        run: flutter pub get
+
+      # base-href must match the repo name so asset URLs resolve under
+      # https://<user>.github.io/<repo>/.
+      - name: Build web
+        working-directory: example
+        run: flutter build web --release --base-href /flutter_empty_state/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: example/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
