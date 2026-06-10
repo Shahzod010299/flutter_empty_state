@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.2.0
+
+- **Pull-to-refresh**: new `onRefresh` on `EmptyState`, `ErrorState`,
+  `NoInternetState` and `SearchEmptyState` wraps the state in a
+  `RefreshIndicator` with an always-scrollable viewport — pull down to reload
+  even when there's no list on screen.
+- **Async action buttons**: action callbacks (`onAction`, `onRetry`,
+  `onClear`) now accept `FutureOr<void>`. When a callback returns a `Future`,
+  the button disables itself and shows an inline progress indicator until it
+  completes.
+- **Secondary action**: optional `secondaryActionText` / `onSecondaryAction`
+  render a `TextButton` under the main action (e.g. "Retry" + "Go back").
+- **`ErrorState.details`**: collapsible, selectable technical details behind a
+  "Details" disclosure — perfect for raw exception text in bug-report flows.
+- **`StateView.onRetry`**: wires the retry button of the default error and
+  no-internet states, so `StateView(state: s, onRetry: _load, child: ...)` is
+  a complete screen.
+- **`StateView.transitionBuilder`**: customise the transition between states
+  (same contract as `AnimatedSwitcher.transitionBuilder`).
+- **`SkeletonParagraph`**: a text-block placeholder with a shorter last line.
+- `SkeletonList` now works inside unbounded-height parents (a `Column`,
+  another scrollable) instead of throwing.
+- The shimmer sweep follows the ambient text direction (RTL support).
+- `EmptyStateTheme` gains `secondaryButtonStyle`, `skeletonBaseColor` and
+  `skeletonHighlightColor`.
+
 ## 0.1.2
 
 - Declare supported platforms (Android, iOS, web, Windows, macOS, Linux)

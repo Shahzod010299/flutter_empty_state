@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -20,6 +22,9 @@ class NoInternetState extends StatelessWidget {
     this.iconWidget,
     this.title = 'No internet connection',
     this.message = 'Please check your connection and try again.',
+    this.secondaryActionText,
+    this.onSecondaryAction,
+    this.onRefresh,
     this.iconSize,
     this.spacing,
     this.padding,
@@ -29,12 +34,15 @@ class NoInternetState extends StatelessWidget {
     this.titleStyle,
     this.messageStyle,
     this.buttonStyle,
+    this.secondaryButtonStyle,
     this.animate,
     this.animationDuration,
   });
 
   /// Called when the retry button is tapped. No button is shown when null.
-  final VoidCallback? onRetry;
+  /// Returning a [Future] makes the button show inline progress until it
+  /// completes.
+  final FutureOr<void> Function()? onRetry;
 
   /// Label for the retry button.
   final String retryText;
@@ -50,6 +58,15 @@ class NoInternetState extends StatelessWidget {
 
   /// {@macro fes.message}
   final String? message;
+
+  /// {@macro fes.secondaryActionText}
+  final String? secondaryActionText;
+
+  /// {@macro fes.onSecondaryAction}
+  final FutureOr<void> Function()? onSecondaryAction;
+
+  /// {@macro fes.onRefresh}
+  final Future<void> Function()? onRefresh;
 
   /// {@macro fes.iconSize}
   final double? iconSize;
@@ -78,6 +95,9 @@ class NoInternetState extends StatelessWidget {
   /// {@macro fes.buttonStyle}
   final ButtonStyle? buttonStyle;
 
+  /// {@macro fes.secondaryButtonStyle}
+  final ButtonStyle? secondaryButtonStyle;
+
   /// {@macro fes.animate}
   final bool? animate;
 
@@ -94,6 +114,9 @@ class NoInternetState extends StatelessWidget {
       // Map the connectivity-specific API onto the shared action slot.
       actionText: retryText,
       onAction: onRetry,
+      secondaryActionText: secondaryActionText,
+      onSecondaryAction: onSecondaryAction,
+      onRefresh: onRefresh,
       iconSize: iconSize,
       spacing: spacing,
       padding: padding,
@@ -103,6 +126,7 @@ class NoInternetState extends StatelessWidget {
       titleStyle: titleStyle,
       messageStyle: messageStyle,
       buttonStyle: buttonStyle,
+      secondaryButtonStyle: secondaryButtonStyle,
       animate: animate,
       animationDuration: animationDuration,
     );

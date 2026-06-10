@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -22,6 +24,9 @@ class SearchEmptyState extends StatelessWidget {
     this.iconWidget,
     this.title = 'No results found',
     this.message,
+    this.secondaryActionText,
+    this.onSecondaryAction,
+    this.onRefresh,
     this.iconSize,
     this.spacing,
     this.padding,
@@ -31,6 +36,7 @@ class SearchEmptyState extends StatelessWidget {
     this.titleStyle,
     this.messageStyle,
     this.buttonStyle,
+    this.secondaryButtonStyle,
     this.animate,
     this.animationDuration,
   });
@@ -39,7 +45,9 @@ class SearchEmptyState extends StatelessWidget {
   final String? query;
 
   /// Called when the clear button is tapped. No button is shown when null.
-  final VoidCallback? onClear;
+  /// Returning a [Future] makes the button show inline progress until it
+  /// completes.
+  final FutureOr<void> Function()? onClear;
 
   /// Label for the clear button.
   final String clearText;
@@ -55,6 +63,15 @@ class SearchEmptyState extends StatelessWidget {
 
   /// Overrides the auto-generated "No matches for ..." line.
   final String? message;
+
+  /// {@macro fes.secondaryActionText}
+  final String? secondaryActionText;
+
+  /// {@macro fes.onSecondaryAction}
+  final FutureOr<void> Function()? onSecondaryAction;
+
+  /// {@macro fes.onRefresh}
+  final Future<void> Function()? onRefresh;
 
   /// {@macro fes.iconSize}
   final double? iconSize;
@@ -83,6 +100,9 @@ class SearchEmptyState extends StatelessWidget {
   /// {@macro fes.buttonStyle}
   final ButtonStyle? buttonStyle;
 
+  /// {@macro fes.secondaryButtonStyle}
+  final ButtonStyle? secondaryButtonStyle;
+
   /// {@macro fes.animate}
   final bool? animate;
 
@@ -102,6 +122,9 @@ class SearchEmptyState extends StatelessWidget {
       message: resolvedMessage,
       actionText: clearText,
       onAction: onClear,
+      secondaryActionText: secondaryActionText,
+      onSecondaryAction: onSecondaryAction,
+      onRefresh: onRefresh,
       iconSize: iconSize,
       spacing: spacing,
       padding: padding,
@@ -111,6 +134,7 @@ class SearchEmptyState extends StatelessWidget {
       titleStyle: titleStyle,
       messageStyle: messageStyle,
       buttonStyle: buttonStyle,
+      secondaryButtonStyle: secondaryButtonStyle,
       animate: animate,
       animationDuration: animationDuration,
     );

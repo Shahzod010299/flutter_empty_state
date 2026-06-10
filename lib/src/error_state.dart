@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -17,6 +19,16 @@ import 'state_layout.dart';
 /// Unlike [EmptyState], [title], [message] and [actionText] default to
 /// error-friendly copy, so `ErrorState(onAction: _retry)` already gives you a
 /// working retry screen.
+///
+/// Pass [details] to tuck the raw error behind a collapsed "Details" button —
+/// useful in debug builds or for "report a bug" flows:
+///
+/// ```dart
+/// ErrorState(
+///   onAction: _retry,
+///   details: error.toString(),
+/// )
+/// ```
 class ErrorState extends StatelessWidget {
   const ErrorState({
     super.key,
@@ -24,8 +36,13 @@ class ErrorState extends StatelessWidget {
     this.iconWidget,
     this.title = 'Something went wrong',
     this.message = 'Please try again later.',
+    this.details,
+    this.detailsLabel = 'Details',
     this.actionText = 'Retry',
     this.onAction,
+    this.secondaryActionText,
+    this.onSecondaryAction,
+    this.onRefresh,
     this.iconSize,
     this.spacing,
     this.padding,
@@ -35,6 +52,7 @@ class ErrorState extends StatelessWidget {
     this.titleStyle,
     this.messageStyle,
     this.buttonStyle,
+    this.secondaryButtonStyle,
     this.animate,
     this.animationDuration,
   });
@@ -51,11 +69,29 @@ class ErrorState extends StatelessWidget {
   /// {@macro fes.message}
   final String? message;
 
+  /// Raw technical details — an exception message, a status code, a stack
+  /// trace. Collapsed behind a small [detailsLabel] button so they don't scare
+  /// regular users, and selectable once expanded so they can be copied into a
+  /// bug report.
+  final String? details;
+
+  /// Label for the button that expands [details].
+  final String detailsLabel;
+
   /// {@macro fes.actionText}
   final String? actionText;
 
   /// {@macro fes.onAction}
-  final VoidCallback? onAction;
+  final FutureOr<void> Function()? onAction;
+
+  /// {@macro fes.secondaryActionText}
+  final String? secondaryActionText;
+
+  /// {@macro fes.onSecondaryAction}
+  final FutureOr<void> Function()? onSecondaryAction;
+
+  /// {@macro fes.onRefresh}
+  final Future<void> Function()? onRefresh;
 
   /// {@macro fes.iconSize}
   final double? iconSize;
@@ -84,6 +120,9 @@ class ErrorState extends StatelessWidget {
   /// {@macro fes.buttonStyle}
   final ButtonStyle? buttonStyle;
 
+  /// {@macro fes.secondaryButtonStyle}
+  final ButtonStyle? secondaryButtonStyle;
+
   /// {@macro fes.animate}
   final bool? animate;
 
@@ -97,8 +136,13 @@ class ErrorState extends StatelessWidget {
       iconWidget: iconWidget,
       title: title,
       message: message,
+      details: details,
+      detailsLabel: detailsLabel,
       actionText: actionText,
       onAction: onAction,
+      secondaryActionText: secondaryActionText,
+      onSecondaryAction: onSecondaryAction,
+      onRefresh: onRefresh,
       iconSize: iconSize,
       spacing: spacing,
       padding: padding,
@@ -108,6 +152,7 @@ class ErrorState extends StatelessWidget {
       titleStyle: titleStyle,
       messageStyle: messageStyle,
       buttonStyle: buttonStyle,
+      secondaryButtonStyle: secondaryButtonStyle,
       animate: animate,
       animationDuration: animationDuration,
     );
@@ -119,6 +164,7 @@ class ErrorState extends StatelessWidget {
     properties
       ..add(StringProperty('title', title, defaultValue: null))
       ..add(StringProperty('message', message, defaultValue: null))
+      ..add(StringProperty('details', details, defaultValue: null))
       ..add(
           FlagProperty('action', value: onAction != null, ifTrue: 'tappable'));
   }

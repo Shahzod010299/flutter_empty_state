@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -26,6 +28,9 @@ class EmptyState extends StatelessWidget {
     this.message,
     this.actionText,
     this.onAction,
+    this.secondaryActionText,
+    this.onSecondaryAction,
+    this.onRefresh,
     this.iconSize,
     this.spacing,
     this.padding,
@@ -35,6 +40,7 @@ class EmptyState extends StatelessWidget {
     this.titleStyle,
     this.messageStyle,
     this.buttonStyle,
+    this.secondaryButtonStyle,
     this.animate,
     this.animationDuration,
   });
@@ -67,9 +73,30 @@ class EmptyState extends StatelessWidget {
   final String? actionText;
 
   /// {@template fes.onAction}
-  /// Called when the action button is tapped.
+  /// Called when the action button is tapped. Returning a [Future] makes the
+  /// button disable itself and show an inline progress indicator until the
+  /// future completes — handy for async retries.
   /// {@endtemplate}
-  final VoidCallback? onAction;
+  final FutureOr<void> Function()? onAction;
+
+  /// {@template fes.secondaryActionText}
+  /// Label for an optional secondary (text) button under the main action.
+  /// Only shows when both this and [onSecondaryAction] are set.
+  /// {@endtemplate}
+  final String? secondaryActionText;
+
+  /// {@template fes.onSecondaryAction}
+  /// Called when the secondary button is tapped. Behaves like [onAction],
+  /// including the async progress treatment.
+  /// {@endtemplate}
+  final FutureOr<void> Function()? onSecondaryAction;
+
+  /// {@template fes.onRefresh}
+  /// Enables pull-to-refresh. When set, the state is wrapped in a
+  /// [RefreshIndicator] with an always-scrollable viewport, so the user can
+  /// pull down to reload even though there's no list on screen.
+  /// {@endtemplate}
+  final Future<void> Function()? onRefresh;
 
   /// {@template fes.iconSize}
   /// Icon size. Falls back to the [EmptyStateTheme], then `72`.
@@ -124,6 +151,12 @@ class EmptyState extends StatelessWidget {
   /// {@endtemplate}
   final ButtonStyle? buttonStyle;
 
+  /// {@template fes.secondaryButtonStyle}
+  /// Style for the secondary [TextButton]. Falls back to the
+  /// [EmptyStateTheme], then the ambient [TextButton] theme.
+  /// {@endtemplate}
+  final ButtonStyle? secondaryButtonStyle;
+
   /// {@template fes.animate}
   /// Whether to play a subtle fade + slide when the widget first appears.
   /// Defaults to `true` and is skipped automatically when the OS "reduce
@@ -146,6 +179,9 @@ class EmptyState extends StatelessWidget {
       message: message,
       actionText: actionText,
       onAction: onAction,
+      secondaryActionText: secondaryActionText,
+      onSecondaryAction: onSecondaryAction,
+      onRefresh: onRefresh,
       iconSize: iconSize,
       spacing: spacing,
       padding: padding,
@@ -155,6 +191,7 @@ class EmptyState extends StatelessWidget {
       titleStyle: titleStyle,
       messageStyle: messageStyle,
       buttonStyle: buttonStyle,
+      secondaryButtonStyle: secondaryButtonStyle,
       animate: animate,
       animationDuration: animationDuration,
     );

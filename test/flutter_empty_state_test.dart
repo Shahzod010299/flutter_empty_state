@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -187,5 +189,223 @@ void main() {
 
     final names = builder.properties.map((p) => p.name).toList();
     expect(names, containsAll(<String>['title', 'message', 'icon', 'action']));
+  });
+
+  group('Actions', () {
+    testWidgets('async onAction disables the button and shows progress',
+        (tester) async {
+      final completer = Completer<void>();
+      await tester.pumpWidget(_host(EmptyState(
+        animate: false,
+        actionText: 'Retry',
+        onAction: () => completer.future,
+      )));
+
+      await tester.tap(find.text('Retry'));
+      await tester.pump();
+
+      expect(
+        find.descendant(
+          of: find.byType(FilledButton),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNull,
+      );
+
+      completer.complete();
+      await tester.pump();
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNotNull,
+      );
+    });
+
+    testWidgets('renders a secondary action that fires', (tester) async {
+      var skipped = false;
+      await tester.pumpWidget(_host(EmptyState(
+        animate: false,
+        actionText: 'Add',
+        onAction: () {},
+        secondaryActionText: 'Skip',
+        onSecondaryAction: () => skipped = true,
+      )));
+
+      expect(find.widgetWithText(FilledButton, 'Add'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Skip'));
+      expect(skipped, isTrue);
+    });
+
+    testWidgets('secondary action renders without a primary one',
+        (tester) async {
+      await tester.pumpWidget(_host(EmptyState(
+        animate: false,
+        secondaryActionText: 'Skip',
+        onSecondaryAction: () {},
+      )));
+
+      expect(find.byType(FilledButton), findsNothing);
+      expect(find.widgetWithText(TextButton, 'Skip'), findsOneWidget);
+    });
+  });
+
+  group('Pull to refresh', () {
+    testWidgets('onRefresh makes the state pull-to-refreshable',
+        (tester) async {
+      var refreshed = false;
+      await tester.pumpWidget(_host(EmptyState(
+        animate: false,
+        onRefresh: () async => refreshed = true,
+      )));
+
+      await tester.fling(
+          find.byType(SingleChildScrollView), const Offset(0, 300), 1000);
+      await tester.pumpAndSettle();
+
+      expect(refreshed, isTrue);
+    });
+
+    testWidgets('content stays centered inside the refresh scrollable',
+        (tester) async {
+      // Icon and message off, so the title is the whole content block and
+      // its center should land on the screen center.
+      await tester.pumpWidget(_host(EmptyState(
+        animate: false,
+        icon: null,
+        title: 'Centered',
+        onRefresh: () async {},
+      )));
+
+      final box = tester.getCenter(find.text('Centered'));
+      final screen = tester.getCenter(find.byType(Scaffold));
+      expect(box.dy, moreOrLessEquals(screen.dy, epsilon: 1));
+    });
+  });
+
+  group('ErrorState details', () {
+    testWidgets('details stay collapsed until tapped', (tester) async {
+      await tester.pumpWidget(_host(const ErrorState(
+        animate: false,
+        details: 'HTTP 500 — internal server error',
+      )));
+
+      expect(find.text('HTTP 500 — internal server error'), findsNothing);
+      expect(find.text('Details'), findsOneWidget);
+
+      await tester.tap(find.text('Details'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('HTTP 500 — internal server error'), findsOneWidget);
+    });
+  });
+
+  group('StateView extras', () {
+    testWidgets('onRetry wires the default error state button', (tester) async {
+      var retried = false;
+      await tester.pumpWidget(_host(StateView(
+        state: ViewState.error,
+        animate: false,
+        onRetry: () => retried = true,
+        child: const Text('content'),
+      )));
+
+      await tester.tap(find.text('Retry'));
+      expect(retried, isTrue);
+    });
+
+    testWidgets('onRetry wires the default no-internet state button',
+        (tester) async {
+      var retried = false;
+      await tester.pumpWidget(_host(StateView(
+        state: ViewState.noInternet,
+        animate: false,
+        onRetry: () => retried = true,
+        child: const Text('content'),
+      )));
+
+      await tester.tap(find.text('Retry'));
+      expect(retried, isTrue);
+    });
+
+    testWidgets('transitionBuilder customises the switch animation',
+        (tester) async {
+      await tester.pumpWidget(_host(StateView(
+        state: ViewState.empty,
+        empty: const EmptyState(animate: false),
+        transitionBuilder: (child, animation) =>
+            ScaleTransition(scale: animation, child: child),
+        child: const Text('content'),
+      )));
+
+      expect(find.byType(ScaleTransition), findsWidgets);
+      await tester.pumpAndSettle();
+    });
+  });
+
+  group('Skeletons', () {
+    testWidgets('SkeletonList survives an unbounded-height parent',
+        (tester) async {
+      await tester.pumpWidget(_host(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: SingleChildScrollView(child: SkeletonList(itemCount: 2)),
+        ),
+      ));
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(Skeleton), findsWidgets);
+    });
+
+    testWidgets('SkeletonParagraph renders the requested lines',
+        (tester) async {
+      await tester.pumpWidget(_host(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: SkeletonParagraph(lines: 3),
+        ),
+      ));
+
+      expect(find.byType(Skeleton), findsNWidgets(3));
+    });
+
+    testWidgets('skeleton colours come from the EmptyStateTheme',
+        (tester) async {
+      final theme = ThemeData(
+        extensions: const [
+          EmptyStateTheme(skeletonBaseColor: Color(0xFF123456)),
+        ],
+      );
+      await tester.pumpWidget(_host(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: Skeleton(width: 100),
+        ),
+        theme: theme,
+      ));
+
+      final container = tester.widget<Container>(find.descendant(
+        of: find.byType(Skeleton),
+        matching: find.byType(Container),
+      ));
+      final decoration = container.decoration! as BoxDecoration;
+      expect(decoration.color, const Color(0xFF123456));
+    });
+
+    testWidgets('shimmer renders under RTL without issues', (tester) async {
+      await tester.pumpWidget(_host(
+        const Directionality(
+          textDirection: TextDirection.rtl,
+          child: Shimmer(child: Skeleton(width: 100)),
+        ),
+      ));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(tester.takeException(), isNull);
+    });
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -25,7 +27,12 @@ import 'view_state.dart';
 /// ```
 ///
 /// Any slot you leave out falls back to a sensible default, so you only fill in
-/// the ones you want to customise.
+/// the ones you want to customise. Pass [onRetry] and the default error and
+/// no-internet states come pre-wired with a working retry button:
+///
+/// ```dart
+/// StateView(state: state, onRetry: _load, child: ProductList(...))
+/// ```
 class StateView extends StatelessWidget {
   const StateView({
     super.key,
@@ -35,8 +42,10 @@ class StateView extends StatelessWidget {
     this.empty,
     this.error,
     this.noInternet,
+    this.onRetry,
     this.animate = true,
     this.duration = const Duration(milliseconds: 300),
+    this.transitionBuilder,
   });
 
   /// Which state to show right now.
@@ -57,12 +66,31 @@ class StateView extends StatelessWidget {
   /// Shown for [ViewState.noInternet]. Defaults to a [NoInternetState].
   final Widget? noInternet;
 
+  /// Wires the retry button of the *default* [error] and [noInternet] widgets,
+  /// so the common case needs no explicit `ErrorState` at all. Ignored for
+  /// slots you've filled in yourself. Returning a [Future] shows inline
+  /// progress on the button until it completes.
+  final FutureOr<void> Function()? onRetry;
+
   /// Whether to cross-fade when [state] changes. Defaults to `true`, and is
   /// skipped automatically when the OS "reduce motion" setting is on.
   final bool animate;
 
   /// Duration of the cross-fade between states.
   final Duration duration;
+
+  /// Customises the transition between states — same contract as
+  /// [AnimatedSwitcher.transitionBuilder]. Defaults to a cross-fade.
+  ///
+  /// ```dart
+  /// StateView(
+  ///   state: state,
+  ///   transitionBuilder: (child, animation) =>
+  ///       ScaleTransition(scale: animation, child: child),
+  ///   child: list,
+  /// )
+  /// ```
+  final AnimatedSwitcherTransitionBuilder? transitionBuilder;
 
   Widget _childFor(ViewState state) {
     switch (state) {
@@ -71,9 +99,9 @@ class StateView extends StatelessWidget {
       case ViewState.empty:
         return empty ?? const EmptyState();
       case ViewState.error:
-        return error ?? const ErrorState();
+        return error ?? ErrorState(onAction: onRetry);
       case ViewState.noInternet:
-        return noInternet ?? const NoInternetState();
+        return noInternet ?? NoInternetState(onRetry: onRetry);
       case ViewState.content:
         return child ?? const SizedBox.shrink();
     }
@@ -91,6 +119,8 @@ class StateView extends StatelessWidget {
 
     return AnimatedSwitcher(
       duration: duration,
+      transitionBuilder:
+          transitionBuilder ?? AnimatedSwitcher.defaultTransitionBuilder,
       // Key by the state so the switcher knows a real change happened and
       // cross-fades, rather than reusing the old element in place.
       child: KeyedSubtree(key: ValueKey<ViewState>(state), child: current),

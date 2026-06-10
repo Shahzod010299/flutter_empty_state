@@ -28,11 +28,14 @@ return items.isEmpty
 - 🎨 **Theme-aware** — colours and text styles come from your `ThemeData`, so light/dark just works.
 - 🧩 **Five ready-made states** — `EmptyState`, `ErrorState`, `NoInternetState`, `SearchEmptyState`, `LoadingState`.
 - 🔀 **`StateView`** — render the right widget from a single `ViewState` value, with a cross-fade between states.
+- 🔄 **Pull-to-refresh** — pass `onRefresh` and any state becomes a `RefreshIndicator` scrollable.
+- ⏳ **Async-aware buttons** — return a `Future` from an action and the button shows inline progress until it's done.
+- 🧯 **Error details** — tuck raw exception text behind a collapsible, selectable "Details" disclosure.
 - 🌍 **Global styling** — set your defaults once with an `EmptyStateTheme`, override per widget when needed.
 - ✨ **Subtle entrance animation** — a tasteful fade + slide that respects the OS "reduce motion" setting.
-- 💀 **Skeleton loader** — a built-in shimmer placeholder list for a more polished loading state.
+- 💀 **Skeleton loaders** — shimmer placeholder list and paragraph primitives, RTL-aware and themable.
 - ♿ **Accessible** — real text widgets, decorative icons, and a live region on the loading state.
-- 📦 **Drops in anywhere** — `Scaffold`, `Center`, `Column` and `ListView` all work without layout gymnastics.
+- 📦 **Drops in anywhere** — `Scaffold`, `Center`, `Column`, `ListView` and `CustomScrollView` all work without layout gymnastics.
 - ✅ **Null-safe** and covered by widget tests.
 
 ## Installation
@@ -75,6 +78,41 @@ EmptyState(
 
 > The action button shows up only when you pass **both** `actionText` and `onAction`.
 
+Need a second, lower-emphasis option? Add a secondary action and it renders as
+a `TextButton` under the main one:
+
+```dart
+EmptyState(
+  title: 'Your cart is empty',
+  actionText: 'Browse products',
+  onAction: _browse,
+  secondaryActionText: 'View wishlist',
+  onSecondaryAction: _openWishlist,
+)
+```
+
+### Async actions & pull-to-refresh
+
+Every action callback accepts a `Future`. Return one and the button disables
+itself and shows a small inline spinner until the work finishes — no state
+management needed:
+
+```dart
+ErrorState(
+  onAction: () async => _reload(), // button shows progress while this runs
+)
+```
+
+And if you'd rather let users pull down to reload (even though there's no list
+on screen), pass `onRefresh` and the state wraps itself in a `RefreshIndicator`:
+
+```dart
+EmptyState(
+  title: 'No orders yet',
+  onRefresh: () => _reload(),
+)
+```
+
 ### ErrorState
 
 ```dart
@@ -87,6 +125,16 @@ ErrorState(
 ```
 
 `title`, `message` and `actionText` already default to error-friendly copy, so `ErrorState(onAction: _retry)` is enough for a working retry screen.
+
+Got a raw exception you'd like to keep around for bug reports? Pass it as
+`details` and it hides behind a collapsed, selectable "Details" section:
+
+```dart
+ErrorState(
+  onAction: _retry,
+  details: error.toString(), // expands on tap, selectable for copy-paste
+)
+```
 
 ### NoInternetState
 
@@ -127,7 +175,7 @@ StateView(
 )
 ```
 
-Need a custom shape? Compose your own from the `Skeleton` and `Shimmer` primitives:
+Need a custom shape? Compose your own from the `Skeleton`, `SkeletonParagraph` and `Shimmer` primitives:
 
 ```dart
 Shimmer(
@@ -136,7 +184,7 @@ Shimmer(
     children: const [
       Skeleton.circle(size: 56),
       SizedBox(height: 12),
-      Skeleton(height: 18),           // fills the width
+      SkeletonParagraph(lines: 3),    // a text block with a shorter last line
       SizedBox(height: 8),
       Skeleton(width: 180, height: 14),
     ],
@@ -144,7 +192,7 @@ Shimmer(
 )
 ```
 
-The shimmer is theme-aware (looks right in light and dark) and freezes to a static placeholder when "reduce motion" is on.
+The shimmer is theme-aware (looks right in light and dark), follows the text direction (RTL included) and freezes to a static placeholder when "reduce motion" is on. Want brand-specific colours? Set `skeletonBaseColor` / `skeletonHighlightColor` on your `EmptyStateTheme`.
 
 ## StateView
 
@@ -157,6 +205,30 @@ StateView(
   empty: const EmptyState(title: 'No products found'),
   error: ErrorState(onAction: _retry),
   noInternet: NoInternetState(onRetry: _retry),
+  child: ProductList(items: items),
+)
+```
+
+In the common case you don't even need to spell out the error states — pass
+`onRetry` once and the default error and no-internet widgets come pre-wired
+with a working retry button:
+
+```dart
+StateView(
+  state: viewState,
+  onRetry: _load,
+  child: ProductList(items: items),
+)
+```
+
+Want something fancier than the default cross-fade? `transitionBuilder` has
+the same contract as `AnimatedSwitcher`:
+
+```dart
+StateView(
+  state: viewState,
+  transitionBuilder: (child, animation) =>
+      ScaleTransition(scale: animation, child: child),
   child: ProductList(items: items),
 )
 ```
@@ -268,6 +340,21 @@ Scaffold(body: const EmptyState());                 // centered on screen
 Center(child: const EmptyState());                  // centered
 Column(children: [Expanded(child: EmptyState())]);  // fills and centers
 ListView(children: const [EmptyState()]);           // sits naturally, no crash
+```
+
+Inside a `CustomScrollView`, wrap the state in a `SliverFillRemaining` and it
+centers in the leftover space under your app bar:
+
+```dart
+CustomScrollView(
+  slivers: [
+    const SliverAppBar(title: Text('Orders')),
+    SliverFillRemaining(
+      hasScrollBody: false,
+      child: EmptyState(title: 'No orders yet'),
+    ),
+  ],
+)
 ```
 
 ## Why use this package?

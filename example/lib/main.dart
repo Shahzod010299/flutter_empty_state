@@ -89,9 +89,22 @@ class _ExampleAppState extends State<ExampleApp> {
         message: 'When you add products, they will show up here.',
         actionText: 'Add product',
         onAction: () => _showSnack('Pretend we opened the add-product screen'),
+        secondaryActionText: 'Learn more',
+        onSecondaryAction: () => _showSnack('Pretend we opened the docs'),
+        // Pull down to "reload" — the state is wrapped in a RefreshIndicator.
+        onRefresh: () async {
+          await Future<void>.delayed(const Duration(milliseconds: 600));
+          if (mounted) setState(() => _demo = _Demo.content);
+        },
       ),
       error: ErrorState(
-        onAction: () => setState(() => _demo = _Demo.content),
+        // Returning a Future shows inline progress on the button.
+        onAction: () async {
+          await Future<void>.delayed(const Duration(seconds: 1));
+          if (mounted) setState(() => _demo = _Demo.content);
+        },
+        details: 'HttpException: connection timed out\n'
+            'GET https://api.example.com/products → 504',
       ),
       noInternet: NoInternetState(
         onRetry: () => setState(() => _demo = _Demo.content),

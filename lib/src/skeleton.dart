@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'empty_state_theme.dart';
+
 /// An animated shimmer that sweeps a soft highlight across its child.
 ///
 /// Wrap a group of [Skeleton]s in a single [Shimmer] so the highlight runs
@@ -50,9 +52,10 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
     }
     if (!_controller.isAnimating) _controller.repeat();
 
-    final scheme = Theme.of(context).colorScheme;
-    final base = _skeletonBase(scheme);
-    final highlight = _skeletonHighlight(scheme);
+    final base = _skeletonBase(context);
+    final highlight = _skeletonHighlight(context);
+    // Sweep in the reading direction, so RTL locales shimmer right-to-left.
+    final direction = Directionality.maybeOf(context) ?? TextDirection.ltr;
 
     return AnimatedBuilder(
       animation: _controller,
@@ -63,7 +66,7 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
           shaderCallback: (bounds) => LinearGradient(
             colors: [base, highlight, base],
             stops: const [0.35, 0.5, 0.65],
-            transform: _SlidingGradient(_controller.value),
+            transform: _SlidingGradient(_controller.value, direction),
           ).createShader(bounds),
           child: child,
         );
@@ -72,15 +75,19 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
   }
 }
 
-// Slides the highlight from just off the left edge to just off the right.
+// Slides the highlight from just off one edge to just off the other,
+// following the ambient text direction.
 class _SlidingGradient extends GradientTransform {
-  const _SlidingGradient(this.value);
+  const _SlidingGradient(this.value, this.direction);
 
   final double value;
+  final TextDirection direction;
 
   @override
   Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues((value * 2 - 1) * bounds.width, 0, 0);
+    final dx = (value * 2 - 1) * bounds.width;
+    return Matrix4.translationValues(
+        direction == TextDirection.rtl ? -dx : dx, 0, 0);
   }
 }
 
@@ -118,9 +125,65 @@ class Skeleton extends StatelessWidget {
       width: width ?? double.infinity,
       height: height,
       decoration: BoxDecoration(
-        color: _skeletonBase(Theme.of(context).colorScheme),
+        color: _skeletonBase(context),
         borderRadius: borderRadius,
       ),
+    );
+  }
+}
+
+/// A few stacked [Skeleton] lines that stand in for a block of text, with a
+/// shorter last line the way real paragraphs end.
+///
+/// ```dart
+/// Shimmer(
+///   child: SkeletonParagraph(lines: 3),
+/// )
+/// ```
+class SkeletonParagraph extends StatelessWidget {
+  const SkeletonParagraph({
+    super.key,
+    this.lines = 3,
+    this.lineHeight = 14,
+    this.spacing = 10,
+    this.lastLineWidthFraction = 0.6,
+  })  : assert(lines > 0, 'lines must be at least 1'),
+        assert(
+          lastLineWidthFraction > 0 && lastLineWidthFraction <= 1,
+          'lastLineWidthFraction must be in (0, 1]',
+        );
+
+  /// How many placeholder lines to draw.
+  final int lines;
+
+  /// Height of each line.
+  final double lineHeight;
+
+  /// Vertical gap between lines.
+  final double spacing;
+
+  /// Width of the last line as a fraction of the full width. Ignored when
+  /// there's only one line.
+  final double lastLineWidthFraction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < lines; i++) ...[
+          if (i > 0) SizedBox(height: spacing),
+          if (i == lines - 1 && lines > 1)
+            FractionallySizedBox(
+              widthFactor: lastLineWidthFraction,
+              alignment: AlignmentDirectional.centerStart,
+              child: Skeleton(height: lineHeight),
+            )
+          else
+            Skeleton(height: lineHeight),
+        ],
+      ],
     );
   }
 }
@@ -158,13 +221,22 @@ class SkeletonList extends StatelessWidget {
       label: 'Loading',
       container: true,
       child: Shimmer(
-        child: ListView.separated(
-          padding: padding,
-          itemCount: itemCount,
-          // It's a placeholder, so there's nothing to scroll to.
-          physics: const NeverScrollableScrollPhysics(),
-          separatorBuilder: (context, index) => SizedBox(height: itemSpacing),
-          itemBuilder: (context, index) => _SkeletonRow(hasLeading: hasLeading),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return ListView.separated(
+              padding: padding,
+              itemCount: itemCount,
+              // Inside an unbounded parent (a Column, another scrollable) a
+              // ListView can't expand, so size it to its children instead.
+              shrinkWrap: !constraints.hasBoundedHeight,
+              // It's a placeholder, so there's nothing to scroll to.
+              physics: const NeverScrollableScrollPhysics(),
+              separatorBuilder: (context, index) =>
+                  SizedBox(height: itemSpacing),
+              itemBuilder: (context, index) =>
+                  _SkeletonRow(hasLeading: hasLeading),
+            );
+          },
         ),
       ),
     );
@@ -200,10 +272,17 @@ class _SkeletonRow extends StatelessWidget {
   }
 }
 
-// Skeleton colours are blended from the scheme so they read correctly in both
-// light and dark without any hard-coded greys.
-Color _skeletonBase(ColorScheme scheme) =>
-    Color.lerp(scheme.surface, scheme.onSurface, 0.13)!;
+// Skeleton colours come from the EmptyStateTheme when set; otherwise they're
+// blended from the scheme so they read correctly in both light and dark
+// without any hard-coded greys.
+Color _skeletonBase(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.extension<EmptyStateTheme>()?.skeletonBaseColor ??
+      Color.lerp(theme.colorScheme.surface, theme.colorScheme.onSurface, 0.13)!;
+}
 
-Color _skeletonHighlight(ColorScheme scheme) =>
-    Color.lerp(scheme.surface, scheme.onSurface, 0.05)!;
+Color _skeletonHighlight(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.extension<EmptyStateTheme>()?.skeletonHighlightColor ??
+      Color.lerp(theme.colorScheme.surface, theme.colorScheme.onSurface, 0.05)!;
+}

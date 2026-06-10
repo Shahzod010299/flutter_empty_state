@@ -33,8 +33,11 @@ class EmptyStateTheme extends ThemeExtension<EmptyStateTheme> {
     this.titleStyle,
     this.messageStyle,
     this.buttonStyle,
+    this.secondaryButtonStyle,
     this.animate,
     this.animationDuration,
+    this.skeletonBaseColor,
+    this.skeletonHighlightColor,
   });
 
   /// Default icon colour.
@@ -64,11 +67,22 @@ class EmptyStateTheme extends ThemeExtension<EmptyStateTheme> {
   /// Default action-button style.
   final ButtonStyle? buttonStyle;
 
+  /// Default style for the secondary (text) action button.
+  final ButtonStyle? secondaryButtonStyle;
+
   /// Whether the entrance animation plays by default.
   final bool? animate;
 
   /// Default entrance-animation duration.
   final Duration? animationDuration;
+
+  /// Base colour of [Skeleton] shapes and the shimmer. Defaults to a blend of
+  /// the colour scheme's `surface` and `onSurface`.
+  final Color? skeletonBaseColor;
+
+  /// Colour of the moving shimmer highlight. Defaults to a lighter blend of
+  /// the colour scheme's `surface` and `onSurface`.
+  final Color? skeletonHighlightColor;
 
   @override
   EmptyStateTheme copyWith({
@@ -81,8 +95,11 @@ class EmptyStateTheme extends ThemeExtension<EmptyStateTheme> {
     TextStyle? titleStyle,
     TextStyle? messageStyle,
     ButtonStyle? buttonStyle,
+    ButtonStyle? secondaryButtonStyle,
     bool? animate,
     Duration? animationDuration,
+    Color? skeletonBaseColor,
+    Color? skeletonHighlightColor,
   }) {
     return EmptyStateTheme(
       iconColor: iconColor ?? this.iconColor,
@@ -94,8 +111,12 @@ class EmptyStateTheme extends ThemeExtension<EmptyStateTheme> {
       titleStyle: titleStyle ?? this.titleStyle,
       messageStyle: messageStyle ?? this.messageStyle,
       buttonStyle: buttonStyle ?? this.buttonStyle,
+      secondaryButtonStyle: secondaryButtonStyle ?? this.secondaryButtonStyle,
       animate: animate ?? this.animate,
       animationDuration: animationDuration ?? this.animationDuration,
+      skeletonBaseColor: skeletonBaseColor ?? this.skeletonBaseColor,
+      skeletonHighlightColor:
+          skeletonHighlightColor ?? this.skeletonHighlightColor,
     );
   }
 
@@ -111,6 +132,12 @@ class EmptyStateTheme extends ThemeExtension<EmptyStateTheme> {
       titleStyle: TextStyle.lerp(titleStyle, other.titleStyle, t),
       messageStyle: TextStyle.lerp(messageStyle, other.messageStyle, t),
       buttonStyle: ButtonStyle.lerp(buttonStyle, other.buttonStyle, t),
+      secondaryButtonStyle:
+          ButtonStyle.lerp(secondaryButtonStyle, other.secondaryButtonStyle, t),
+      skeletonBaseColor:
+          Color.lerp(skeletonBaseColor, other.skeletonBaseColor, t),
+      skeletonHighlightColor:
+          Color.lerp(skeletonHighlightColor, other.skeletonHighlightColor, t),
       // These can't be interpolated, so flip them at the halfway point.
       textAlign: t < 0.5 ? textAlign : other.textAlign,
       animate: t < 0.5 ? animate : other.animate,
@@ -133,8 +160,11 @@ class EmptyStateTheme extends ThemeExtension<EmptyStateTheme> {
         other.titleStyle == titleStyle &&
         other.messageStyle == messageStyle &&
         other.buttonStyle == buttonStyle &&
+        other.secondaryButtonStyle == secondaryButtonStyle &&
         other.animate == animate &&
-        other.animationDuration == animationDuration;
+        other.animationDuration == animationDuration &&
+        other.skeletonBaseColor == skeletonBaseColor &&
+        other.skeletonHighlightColor == skeletonHighlightColor;
   }
 
   @override
@@ -148,7 +178,10 @@ class EmptyStateTheme extends ThemeExtension<EmptyStateTheme> {
         titleStyle,
         messageStyle,
         buttonStyle,
+        secondaryButtonStyle,
         animate,
         animationDuration,
+        skeletonBaseColor,
+        skeletonHighlightColor,
       );
 }
